@@ -14,7 +14,7 @@
 
 ## Demo
 
-![Demo Screenshot](demo-screenshot.png)
+![Demo Screenshot](./src//screenshot/image.png)
 
 ## Installation
 
