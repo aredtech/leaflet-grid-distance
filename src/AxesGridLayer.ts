@@ -1,190 +1,196 @@
 import * as L from 'leaflet';
 
 interface AxesLayerOptions extends L.GridLayerOptions {
-  cells: number;
-  color: string;
-  axesColor: string;
-  axesWidth: number;
-  zoom: number;
-  showLabel: boolean;
-  defaultLabel: {
-    color: string;
-    size: number;
-  };
-  center: L.LatLngLiteral;
+  primaryColor: string;
+  secondaryColor: string;
+  textColor: string;
+  fontSize: number;
+  kmThreshold: number;
 }
 
 const AxesLayerWithDistance = L.GridLayer.extend({
   options: {
-    cells: 5,
-    color: '#40404044',
-    axesColor: '#ff6754',
-    axesWidth: 0.8,
-    zoom: 10,
-    showLabel: false,
-    defaultLabel: {
-      color: '#404040',
-      size: 13,
-    },
-    center: { lat: 0, lng: 0 },
-  } as AxesLayerOptions,
-
-  onAdd: function (map: L.Map): void {
-    L.GridLayer.prototype.onAdd.call(this, map);
-    this.setCenter(this.options.center);
+    tileSize: 256,
+    primaryColor: '#ff0000',
+    secondaryColor: '#999999',
+    textColor: '#000000',
+    fontSize: 12,
+    kmThreshold: 13,
   },
 
-  setCenter: function (center: L.LatLngExpression): void {
-    this.options.center = L.latLng(center);
+  initialize: function (options: Partial<AxesLayerOptions>) {
+    (L as any).setOptions(this, options);
+    (L.GridLayer.prototype as any).initialize.call(this, options);
+    this._center = null;
+  },
+
+  onAdd: function (map: L.Map) {
+    L.GridLayer.prototype.onAdd.call(this, map);
+    this._center = map.getCenter();
+    map.on('move', this._onMove, this);
+  },
+
+  onRemove: function (map: L.Map) {
+    map.off('move', this._onMove, this);
+    L.GridLayer.prototype.onRemove.call(this, map);
+  },
+
+  // eslint-disable-next-line unused-imports/no-unused-vars
+  _onMove: function (e: L.LeafletEvent) {
+    this._center = this._map.getCenter();
     this.redraw();
   },
 
-  createTile: function (coords: L.Coords): SVGElement {
-    const svg = this.createParentTile();
-    const n = this.options.cells;
+  createTile: function (coords: L.Coords, done: (error: Error | null, tile: HTMLElement) => void): HTMLElement {
+    const tile = L.DomUtil.create('canvas', 'leaflet-tile') as HTMLCanvasElement;
+    const size = this.getTileSize();
+    tile.width = size.x;
+    tile.height = size.y;
+    const ctx = tile.getContext('2d');
 
+    // Ensure _center is defined before drawing
+    if (!this._center && this._map) {
+      this._center = this._map.getCenter();
+    }
+
+    if (this._center) {
+      this._drawGrid(ctx, coords, size);
+    }
+
+    setTimeout(() => {
+      done(null, tile);
+    }, 0);
+
+    return tile;
+  },
+
+  _drawGrid: function (ctx: CanvasRenderingContext2D, coords: L.Coords, size: L.Point) {
+    const zoom = this._map.getZoom();
+    const centerPoint = this._map.project(this._center, zoom);
+    const tilePoint = coords.scaleBy(size);
+
+    // Draw grid lines
+    ctx.strokeStyle = this.options.secondaryColor;
+    ctx.lineWidth = 1;
+
+    const gridSize = size.x / 4; // Since we're drawing 4x4 grid
+
+    for (let i = 0; i <= size.x; i += gridSize) {
+      ctx.beginPath();
+      ctx.moveTo(i, 0);
+      ctx.lineTo(i, size.y);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(0, i);
+      ctx.lineTo(size.x, i);
+      ctx.stroke();
+    }
+
+    // Calculate axis positions
+    let xAxisY = centerPoint.y - tilePoint.y;
+    let yAxisX = centerPoint.x - tilePoint.x;
+
+    // Snap axes to nearest grid line
+    xAxisY = Math.round(xAxisY / gridSize) * gridSize;
+    yAxisX = Math.round(yAxisX / gridSize) * gridSize;
+
+    // Draw main axes
+    ctx.strokeStyle = this.options.primaryColor;
+    ctx.lineWidth = 2;
+
+    // Draw X-axis (horizontal line)
+    if (xAxisY >= 0 && xAxisY <= size.y) {
+      ctx.beginPath();
+      ctx.moveTo(0, xAxisY);
+      ctx.lineTo(size.x, xAxisY);
+      ctx.stroke();
+    }
+
+    // Draw Y-axis (vertical line)
+    if (yAxisX >= 0 && yAxisX <= size.x) {
+      ctx.beginPath();
+      ctx.moveTo(yAxisX, 0);
+      ctx.lineTo(yAxisX, size.y);
+      ctx.stroke();
+    }
+
+    // Draw distance labels
+    this._drawDistanceLabels(ctx, coords, size, centerPoint, zoom);
+  },
+
+  _drawDistanceLabels: function (
+    ctx: CanvasRenderingContext2D,
+    coords: L.Coords,
+    size: L.Point,
+    centerPoint: L.Point,
+    zoom: number,
+  ) {
     const tileSize = this.getTileSize();
-    const nwPoint = coords.scaleBy(tileSize);
-    const sePoint = nwPoint.add(tileSize);
-    const nw = this._map.unproject(nwPoint, coords.z);
-    const se = this._map.unproject(sePoint, coords.z);
-    const tileDiagonalDistance = this._map.distance(nw, se);
-    const tileEdgeDistance = tileDiagonalDistance / Math.sqrt(2);
 
-    const centerPoint = this._map.project(this.options.center, coords.z);
+    ctx.fillStyle = this.options.textColor;
+    ctx.font = `${this.options.fontSize}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
     const tilePoint = coords.scaleBy(tileSize);
-    const relativePoint = tilePoint.subtract(centerPoint);
+    const xAxisY = centerPoint.y - tilePoint.y;
+    const yAxisX = centerPoint.x - tilePoint.x;
 
-    const size = 256 / n;
-    for (let i = 0; i < n; i++) {
-      for (let j = 0; j < n; j++) {
-        const tile = this.Rect(i * size, j * size, size, size);
-        svg.appendChild(tile);
+    // Calculate the distance represented by one tile
+    const tileCenterPoint = tilePoint.add([tileSize.x / 2, tileSize.y / 2]);
+    let metersPerPixel;
+
+    try {
+      const tileCenterLatLng = this._map.unproject(tileCenterPoint, coords.z);
+      const tileEdgeLatLng = this._map.unproject(tileCenterPoint.add([tileSize.x / 2, 0]), coords.z);
+      const tileWidthMeters = tileCenterLatLng.distanceTo(tileEdgeLatLng) * 2;
+      metersPerPixel = tileWidthMeters / tileSize.x;
+    } catch (error) {
+      console.warn('Error calculating distance:', error);
+      return; // Exit the function if we can't calculate the distance
+    }
+
+    // Determine unit based on the zoom level
+    const useKilometers = zoom <= this.options.kmThreshold;
+    const unit = useKilometers ? 'km' : 'm';
+    const unitMultiplier = useKilometers ? 0.001 : 1;
+
+    // Function to format distance
+    const formatDistance = (distanceMeters: number) => {
+      const distance = distanceMeters * unitMultiplier;
+      return useKilometers ? distance.toFixed(2) : Math.round(distance);
+    };
+
+    // X-axis labels
+    if (xAxisY >= 0 && xAxisY <= size.y) {
+      for (let i = 0; i <= size.x; i += size.x / 4) {
+        const pixelDistance = Math.abs(i - yAxisX);
+        const distanceMeters = pixelDistance * metersPerPixel;
+        const formattedDistance = formatDistance(distanceMeters);
+        ctx.fillText(`${formattedDistance}${unit}`, i, xAxisY + 20);
       }
     }
 
-    svg.setAttributeNS(null, 'id', coords.x.toString());
-
-    if (Math.abs(relativePoint.x) < 128) {
-      const weight = this.options.axesWidth;
-      const x = 128 - relativePoint.x;
-      const line = this.Line(x - weight / 2, 0, x - weight / 2, 256, weight);
-      svg.appendChild(line);
-    }
-
-    if (Math.abs(relativePoint.y) < 128) {
-      const weight = this.options.axesWidth;
-      const y = 128 + relativePoint.y;
-      const line = this.Line(0, y - weight / 2, 256, y - weight / 2, weight);
-      svg.appendChild(line);
-    }
-
-    if (this.options.showLabel) {
-      const size = this.options.defaultLabel.size;
-      const color = this.options.defaultLabel.color;
-      const tileNW = this._map.unproject(coords.scaleBy(tileSize), coords.z);
-      const baseDistance = this._map.distance(this.options.center, tileNW);
-
-      if (Math.abs(relativePoint.y) < 128) {
-        for (let i = 0; i < n; i++) {
-          const offsetX = (i - n / 2) * tileEdgeDistance / n;
-          const distance = baseDistance + offsetX;
-          const text = this.Text(
-            this.normalize(distance),
-            (i * 256) / n, 128 + relativePoint.y,
-            color,
-            size - 2,
-          );
-          svg.appendChild(text);
-        }
-      }
-
-      if (Math.abs(relativePoint.x) < 128) {
-        for (let i = 0; i < n; i++) {
-          const offsetY = (n / 2 - i) * tileEdgeDistance / n;
-          const distance = baseDistance + offsetY;
-          const text = this.Text(
-            this.normalize(distance),
-            128 - relativePoint.x,
-            (i * 256) / n,
-            color,
-            size - 2,
-          );
-          svg.appendChild(text);
-        }
-      }
-
-      if (Math.abs(relativePoint.x) < 128 && Math.abs(relativePoint.y) < 128) {
-        const text = this.Text('0,0', 128 - relativePoint.x, 128 + relativePoint.y, color, size);
-        svg.appendChild(text);
+    // Y-axis labels
+    if (yAxisX >= 0 && yAxisX <= size.x) {
+      for (let i = 0; i <= size.y; i += size.y / 4) {
+        const pixelDistance = Math.abs(i - xAxisY);
+        const distanceMeters = pixelDistance * metersPerPixel;
+        const formattedDistance = formatDistance(distanceMeters);
+        ctx.fillText(`${formattedDistance}${unit}`, yAxisX + 20, i);
       }
     }
-
-    return svg;
   },
 
-  normalize(distanceInMeters: number): string {
-    let val: number;
-    let unit: string;
+  _getScale: function (zoom: number) {
+    const centerLatLng = this._center || this._map.getCenter();
+    const pointC = this._map.project(centerLatLng, zoom);
+    const pointX = L.point(pointC.x + this.options.tileSize / 2, pointC.y);
+    const latLngC = this._map.unproject(pointC, zoom);
+    const latLngX = this._map.unproject(pointX, zoom);
 
-    if (Math.abs(distanceInMeters) >= 1000) {
-      val = distanceInMeters / 1000;
-      unit = 'km';
-    } else {
-      val = distanceInMeters;
-      unit = 'm';
-    }
-
-    val = Math.round(val * 100) / 100;
-    return `${val}${unit}`;
-  },
-
-  createParentTile(): SVGElement {
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttributeNS(
-      'http://www.w3.org/2000/svg',
-      'xlink',
-      'http://www.w3.org/1999/xlink',
-    );
-    svg.setAttributeNS('http://www.w3.org/2000/svg', 'height', '256');
-    svg.setAttributeNS('http://www.w3.org/2000/svg', 'width', '256');
-
-    const rect = this.Rect(0, 0, 256, 256, 2);
-    svg.appendChild(rect);
-    return svg;
-  },
-
-  Rect(x: number, y: number, width: number, height: number, weight = 0.5): SVGRectElement {
-    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    rect.setAttributeNS(null, 'height', height.toString());
-    rect.setAttributeNS(null, 'width', width.toString());
-    rect.setAttributeNS(null, 'x', x.toString());
-    rect.setAttributeNS(null, 'y', y.toString());
-    rect.setAttributeNS(null, 'fill', 'none');
-    rect.setAttributeNS(null, 'stroke', this.options.color);
-    rect.setAttributeNS(null, 'stroke-width', weight.toString());
-    return rect;
-  },
-
-  Line(x1: number, y1: number, x2: number, y2: number, weight = 1): SVGLineElement {
-    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttributeNS(null, 'x1', x1.toString());
-    line.setAttributeNS(null, 'y1', y1.toString());
-    line.setAttributeNS(null, 'x2', x2.toString());
-    line.setAttributeNS(null, 'y2', y2.toString());
-    line.setAttributeNS(null, 'stroke', this.options.axesColor);
-    line.setAttributeNS(null, 'stroke-width', weight.toString());
-    return line;
-  },
-
-  Text(text: string, x: number, y: number, color: string, size: number): SVGTextElement {
-    const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    txt.setAttributeNS(null, 'x', x.toString());
-    txt.setAttributeNS(null, 'y', y.toString());
-    txt.setAttributeNS(null, 'fill', color);
-    txt.setAttributeNS(null, 'font-size', size.toString());
-    txt.textContent = text;
-    return txt;
+    return latLngC.distanceTo(latLngX) / (this.options.tileSize / 2);
   },
 });
 
