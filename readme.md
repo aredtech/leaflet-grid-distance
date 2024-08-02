@@ -10,7 +10,7 @@
 - **Customizable Grid**: Configure the number of cells, color, and size of grid lines.
 - **Axes Labels**: Show distance labels on the axes in meters or kilometers.
 - **Dynamic Centering**: Set and update the center of the grid dynamically.
-- **SVG Rendering**: Utilizes SVG for sharp and scalable graphics.
+- **Canvas Rendering**: Utilizes HTML5 Canvas for efficient rendering.
 
 ## Demo
 
@@ -30,7 +30,7 @@ First, import the library and Leaflet into your project:
 
 ```
 import * as L from 'leaflet';
-import { AxesLayer, AxesLayerOptions } from 'axes-layer-with-distance';
+import { AxesLayerWithDistance, AxesLayerOptions } from 'axes-layer-with-distance';
 
 ```
 
@@ -47,85 +47,31 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
 }).addTo(map);
 
-// Create an AxesLayer with options
-const axesLayer = AxesLayer({
-  cells: 5,
-  color: '#40404044',
-  axesColor: '#ff6754',
-  axesWidth: 0.8,
-  zoom: 10,
-  showLabel: true,
-  defaultLabel: {
-    color: '#404040',
-    size: 13,
-  },
-  center: { lat: 51.505, lng: -0.09 },
+// Create an AxesLayerWithDistance with options
+const axesLayerWithDistance = AxesLayerWithDistance({
+  primaryColor: '#ff0000',
+  secondaryColor: '#999999',
+  textColor: '#000000',
+  fontSize: 12,
+  kmThreshold: 13,
 });
 
-// Add the AxesLayer to the map
-axesLayer.addTo(map);
-
+// Add the AxesLayerWithDistance to the map
+axesLayerWithDistance.addTo(map);
 
 ```
 
 ## Options
 You can customize the AxesLayerWithDistance using the following options:
 
-- **cells**: Number of grid cells per tile. Default is 5.
-- **color** : Color of the grid lines. Supports any CSS color value. Default is '#40404044'.
-- **axesColor**: Color of the main axes lines. Default is '#ff6754'.
-- **axesWidth**: Width of the axes lines in pixels. Default is 0.8.
-- **zoom**: Initial zoom level when adding the layer. Default is 10.
-- **showLabel**: Boolean to show/hide distance labels. Default is false.
-- **defaultLabel.color**: Color of the text labels. Default is '#404040'.
-- **defaultLabel.size**: Font size of the text labels. Default is 13.
-- **center**: The center of the grid, specified as a L.LatLngLiteral with latitude and longitude.
+- **primaryColor**: Color of the main axes lines. Default is '#ff0000'.
+- **secondaryColor**: Color of the grid lines. Default is '#999999'.
+- **textColor**: Color of the text labels. Default is '#000000'.
+- **fontSize**: Font size of the text labels. Default is 12.
+- **kmThreshold**: Zoom level threshold for switching between km and m units. Default is 13.
 
 ## Methods
-- **setCenter(center: L.LatLngExpression)**: void: Updates the center of the grid and redraws the layer.
-
-## Advanced Example
-
-Here is a more advanced usage scenario, including event handling and dynamic updates:
-
-```
-// Create a map with an initial view
-const map = L.map('map').setView([40.7128, -74.0060], 12);
-
-// Add OpenStreetMap tile layer
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '&copy; OpenStreetMap contributors',
-  maxZoom: 18,
-}).addTo(map);
-
-// Configure the AxesLayer options
-const options = {
-  cells: 6,
-  color: '#00000044',
-  axesColor: '#008000',
-  axesWidth: 1.2,
-  zoom: 12,
-  showLabel: true,
-  defaultLabel: {
-    color: '#008000',
-    size: 14,
-  },
-  center: { lat: 40.7128, lng: -74.0060 },
-};
-
-// Initialize the AxesLayer
-const axesLayer = AxesLayer(options);
-
-// Add the AxesLayer to the map
-axesLayer.addTo(map);
-
-// Update the grid center dynamically
-map.on('click', (event) => {
-  axesLayer.setCenter(event.latlng);
-  console.log('Grid center updated:', event.latlng);
-});
-
-```
+- The AxesLayerWithDistance extends Leaflet's GridLayer and inherits all its methods. There are no additional public methods specific to AxesLayerWithDistance.
 
 ## Contributing
 We welcome contributions to improve this library. Please fork the repository, create a branch, and submit a pull request with your changes.

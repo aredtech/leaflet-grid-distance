@@ -8,7 +8,7 @@ interface AxesLayerOptions extends L.GridLayerOptions {
   kmThreshold: number;
 }
 
-const AxesLayerWithDistance = L.GridLayer.extend({
+const AxesLayerWithDistanceClass = L.GridLayer.extend({
   options: {
     tileSize: 256,
     primaryColor: '#ff0000',
@@ -194,8 +194,8 @@ const AxesLayerWithDistance = L.GridLayer.extend({
   },
 });
 
-function AxesLayer(opts: Partial<AxesLayerOptions>): L.GridLayer {
-  return new (AxesLayerWithDistance as any)(opts);
+function AxesLayerWithDistance(opts: Partial<AxesLayerOptions>): L.GridLayer {
+  return new (AxesLayerWithDistanceClass as any)(opts);
 }
 
-export { AxesLayer, AxesLayerOptions };
+export { AxesLayerWithDistance, AxesLayerOptions };
