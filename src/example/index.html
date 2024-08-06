@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="../../dist/AxesGridLayer.bundle.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        #map {
+            height: 100vh;
+            width: 100vw;
+        }
+        </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script>
+        // Initialize the map and set its view
+        var map = L.map('map').setView([51.505, -0.09], 13); // [latitude, longitude], zoom level
+
+        // Add a tile layer to the map (OSM tiles)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19
+        }).addTo(map);
+
+        // Optional: Add a marker
+        var marker = L.marker([51.505, -0.09]).addTo(map);
+        marker.bindPopup("<b>Hello world!</b><br>This is a popup.").openPopup();
+        // Create an instance of AxesLayerWithDistance
+        console.log(typeof(AxesLayerWithDistancee));
+        var axesLayer = AxesLayerWithDistance({
+            // You can pass options here if your AxesLayerWithDistance accepts them
+            primaryColor: '#ff0000',
+            secondaryColor: '#999999',
+            textColor: '#000000',
+            fontSize: 12,
+            kmThreshold: 13
+        });
+
+        // Add the axes layer to the map
+        axesLayer.addTo(map);
+    </script>
+</body>
+</html>
