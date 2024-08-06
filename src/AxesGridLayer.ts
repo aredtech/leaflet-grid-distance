@@ -6,6 +6,8 @@ interface AxesLayerOptions extends L.GridLayerOptions {
   textColor: string;
   fontSize: number;
   kmThreshold: number;
+  origin?: L.LatLngExpression;
+  snapAxesToGrid?: boolean;
 }
 
 const AxesLayerWithDistanceClass = L.GridLayer.extend({
@@ -16,17 +18,19 @@ const AxesLayerWithDistanceClass = L.GridLayer.extend({
     textColor: '#000000',
     fontSize: 12,
     kmThreshold: 13,
+    snapAxesToGrid: false
   },
 
   initialize: function (options: Partial<AxesLayerOptions>) {
     (L as any).setOptions(this, options);
     (L.GridLayer.prototype as any).initialize.call(this, options);
-    this._center = null;
+    this._center = this.options.origin ? this.options.origin : null;
   },
 
   onAdd: function (map: L.Map) {
     L.GridLayer.prototype.onAdd.call(this, map);
-    this._center = map.getCenter();
+    this._center = this.options.origin ? this.options.origin : map.getCenter();
+    map.setView(this._center);
     map.on('move', this._onMove, this);
   },
 
@@ -37,7 +41,7 @@ const AxesLayerWithDistanceClass = L.GridLayer.extend({
 
   // eslint-disable-next-line unused-imports/no-unused-vars
   _onMove: function (e: L.LeafletEvent) {
-    this._center = this._map.getCenter();
+    this._center = this.options.origin ? this.options.origin : this._map.getCenter();
     this.redraw();
   },
 
@@ -50,7 +54,7 @@ const AxesLayerWithDistanceClass = L.GridLayer.extend({
 
     // Ensure _center is defined before drawing
     if (!this._center && this._map) {
-      this._center = this._map.getCenter();
+      this._center = this.options.origin ? this.options.origin : this._map.getCenter();
     }
 
     if (this._center) {
@@ -92,8 +96,10 @@ const AxesLayerWithDistanceClass = L.GridLayer.extend({
     let yAxisX = centerPoint.x - tilePoint.x;
 
     // Snap axes to nearest grid line
-    xAxisY = Math.round(xAxisY / gridSize) * gridSize;
-    yAxisX = Math.round(yAxisX / gridSize) * gridSize;
+    if(this.options.snapAxesToGrid){
+      xAxisY = Math.round(xAxisY / gridSize) * gridSize;
+      yAxisX = Math.round(yAxisX / gridSize) * gridSize;
+    }
 
     // Draw main axes
     ctx.strokeStyle = this.options.primaryColor;
@@ -184,7 +190,7 @@ const AxesLayerWithDistanceClass = L.GridLayer.extend({
   },
 
   _getScale: function (zoom: number) {
-    const centerLatLng = this._center || this._map.getCenter();
+    const centerLatLng = this._center || this.options.origin ? this.options.origin : this._map.getCenter();;
     const pointC = this._map.project(centerLatLng, zoom);
     const pointX = L.point(pointC.x + this.options.tileSize / 2, pointC.y);
     const latLngC = this._map.unproject(pointC, zoom);
