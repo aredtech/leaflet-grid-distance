@@ -14,6 +14,8 @@
 
 ## Demo
 
+# Running Demo Link: (https://aredtech.github.io/leaflet-grid-distance/)
+
 ![Demo Screenshot](./src//screenshot/image.png)
 
 ## Installation
