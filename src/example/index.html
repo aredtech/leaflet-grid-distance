@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,11 +19,103 @@
             height: 100vh;
             width: 100vw;
         }
-        </style>
+
+        .options-selector {
+            position: absolute;
+            background: #fff;
+            right: 1rem;
+            top: 1rem;
+            z-index: 999;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            gap: 0.5rem;
+            display: grid;
+            box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
+        }
+
+        .option {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 0.5rem;
+        }
+
+        input[type="number"] {
+            padding: 0.4rem;
+            border: none;
+            outline: 1px solid rgb(145, 145, 145);
+            border-radius: 5px;
+            max-width: 16rem;
+        }
+
+        input[type="checkbox"] {
+            width: 1.5rem;
+            height: 1.5rem;
+            cursor: pointer;
+        }
+
+        .sub-sect {
+            margin-left: auto;
+        }
+
+        .sub-sect button {
+            padding: 0.2rem;
+        }
+    </style>
 </head>
+
 <body>
     <div id="map"></div>
+    <div class="options-selector">
+        <div class="option">
+            <p>Tile Size</p>
+            <input type="number" name="tile-size" id="tileSize">
+        </div>
+        <div class="option">
+            <p>Font Size</p>
+            <input type="number" name="tile-size" id="fontSize">
+        </div>
+        <div class="option">
+            <p>KM Threshold</p>
+            <input type="number" name="tile-size" id="kmThreshold">
+        </div>
+        <div class="option">
+            <p>Origin</p>
+            <div>
+                <input style="width: 8rem;" type="number" placeholder="Latitude" name="tile-size" id="originLat">
+                <input style="width: 8rem;" type="number" placeholder="Longitude"  name="tile-size" id="originLong">
+            </div>
+        </div>
+        <div class="option">
+            <p>Snap Axes to Grid</p>
+            <div>
+                <input type="checkbox" name="tile-size" id="snapAxesToGrid">
+            </div>
+        </div>
+        <div class="option">
+            <p>Grid Line Color</p>
+            <input type="color" name="tile-size" id="secondaryColor">
+        </div>
+        <div class="option">
+            <p>Axes Line Color</p>
+            <input type="color" name="tile-size" id="primaryColor">
+        </div>
+        <div class="sub-sect">
+            <button>Reset</button>
+            <button onclick="handleOptionsChange()">Select</button>
+        </div>
+    </div>
     <script>
+
+        const options = {
+            primaryColor: '#ff0000',
+            secondaryColor: '#999999',
+            textColor: '#000000',
+            fontSize: 12,
+            kmThreshold: 13,
+            origin: [28.679079, 77.069710],
+            snapAxesToGrid: false
+        }
+
         // Initialize the map and set its view
         var map = L.map('map').setView([51.505, -0.09], 13); // [latitude, longitude], zoom level
 
@@ -36,20 +129,30 @@
         var marker = L.marker([51.505, -0.09]).addTo(map);
         marker.bindPopup("<b>Hello world!</b><br>This is a popup.").openPopup();
         // Create an instance of AxesLayerWithDistance
-        console.log(typeof(AxesLayerWithDistancee));
-        var axesLayer = AxesLayerWithDistance({
-            // You can pass options here if your AxesLayerWithDistance accepts them
-            primaryColor: '#ff0000',
-            secondaryColor: '#999999',
-            textColor: '#000000',
-            fontSize: 12,
-            kmThreshold: 13,
-            origin: [28.679079, 77.069710],
-            snapAxesToGrid: false
-        });
+        console.log(typeof (AxesLayerWithDistancee));
+        var axesLayer = AxesLayerWithDistance(options);
 
         // Add the axes layer to the map
         axesLayer.addTo(map);
+
+        function handleOptionsChange(){
+            const inputs = document.getElementsByTagName('input');
+            Array.from(inputs).forEach(element => {
+                if(element.value){
+                    options[element.id] = element.value;
+                    if(element.type === 'checkbox'){
+                        options[element.id] = element.checked;
+                    }
+                }
+            });
+
+            console.log(inputs, options);
+
+
+            axesLayer.changeOptions(options)
+            
+        }
     </script>
 </body>
+
 </html>

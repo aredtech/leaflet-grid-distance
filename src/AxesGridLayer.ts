@@ -27,6 +27,11 @@ const AxesLayerWithDistanceClass = L.GridLayer.extend({
     this._center = this.options.origin ? this.options.origin : null;
   },
 
+  changeOptions(options: Partial<AxesLayerOptions>){
+    this.initialize(options);
+    this.redraw();
+  },
+
   onAdd: function (map: L.Map) {
     L.GridLayer.prototype.onAdd.call(this, map);
     this._center = this.options.origin ? this.options.origin : map.getCenter();
