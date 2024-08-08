@@ -1,4 +1,3 @@
-Here's the updated README file:
 Copy# AxesLayerWithDistance  [![npm version](https://badge.fury.io/js/axes-layer-with-distance.svg)](https://badge.fury.io/js/axes-layer-with-distance) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 **AxesLayerWithDistance** is a custom Leaflet grid layer that displays a customizable grid with labeled axes on a Leaflet map. This library allows you to visualize distance scales directly on your map tiles, enhancing the map's usability and interactivity for educational, scientific, or navigational purposes.
@@ -22,7 +21,7 @@ Copy# AxesLayerWithDistance  [![npm version](https://badge.fury.io/js/axes-layer
 Install the package via npm:
 
 ```bash
-npm install axes-layer-with-distance
+npm install leaflet-grid-distance
 
 ```
 
