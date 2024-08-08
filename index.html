@@ -205,8 +205,14 @@
 
                 if (id.startsWith('origin')) {
                     optionsForChange.origin[id === 'originLat' ? 0 : 1] = parseFloat(value);
-                } else if (value) {
-                    optionsForChange[id] = type === 'checkbox' ? checked : value;
+                } 
+                
+                if (value) {
+                    optionsForChange[id] = value;
+                }
+
+                if (type === 'checkbox') {
+                    optionsForChange[id] = checked;
                 }
             });
 
@@ -214,6 +220,7 @@
                 optionsForChange.origin = undefined
             }
 
+            console.log(optionsForChange);
             axesLayer.changeOptions(optionsForChange);
         }
 
