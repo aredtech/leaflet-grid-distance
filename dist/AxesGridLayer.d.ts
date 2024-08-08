@@ -5,6 +5,8 @@ interface AxesLayerOptions extends L.GridLayerOptions {
     textColor: string;
     fontSize: number;
     kmThreshold: number;
+    origin?: L.LatLngExpression;
+    snapAxesToGrid?: boolean;
 }
 declare function AxesLayerWithDistance(opts: Partial<AxesLayerOptions>): L.GridLayer;
 export { AxesLayerWithDistance, AxesLayerOptions };
