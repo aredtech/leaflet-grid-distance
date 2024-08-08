@@ -1,7 +1,5 @@
-# AxesLayerWithDistance
-
-[![npm version](https://badge.fury.io/js/axes-layer-with-distance.svg)](https://badge.fury.io/js/axes-layer-with-distance)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+Here's the updated README file:
+Copy# AxesLayerWithDistance  [![npm version](https://badge.fury.io/js/axes-layer-with-distance.svg)](https://badge.fury.io/js/axes-layer-with-distance) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 **AxesLayerWithDistance** is a custom Leaflet grid layer that displays a customizable grid with labeled axes on a Leaflet map. This library allows you to visualize distance scales directly on your map tiles, enhancing the map's usability and interactivity for educational, scientific, or navigational purposes.
 
@@ -10,13 +8,14 @@
 - **Customizable Grid**: Configure the number of cells, color, and size of grid lines.
 - **Axes Labels**: Show distance labels on the axes in meters or kilometers.
 - **Dynamic Centering**: Set and update the center of the grid dynamically.
+- **Snap Axes to Grid**: Option to snap the axes to the nearest grid line.
 - **Canvas Rendering**: Utilizes HTML5 Canvas for efficient rendering.
 
 ## Demo
 
 ### Running Demo Link: [Demo](https://aredtech.github.io/leaflet-grid-distance/)
 
-![Demo Screenshot](./src//screenshot/image.png)
+![Demo Screenshot](./src/screenshot/image.png)
 
 ## Installation
 
@@ -71,9 +70,12 @@ You can customize the AxesLayerWithDistance using the following options:
 - **textColor**: Color of the text labels. Default is '#000000'.
 - **fontSize**: Font size of the text labels. Default is 12.
 - **kmThreshold**: Zoom level threshold for switching between km and m units. Default is 13.
+- **origin**: Set the origin point of the grid layer.
+- **snapAxesToGrid**: Snap the axes to the nearest grid line. Default is false.
 
 ## Methods
-- The AxesLayerWithDistance extends Leaflet's GridLayer and inherits all its methods. There are no additional public methods specific to AxesLayerWithDistance.
+- The AxesLayerWithDistance extends Leaflet's GridLayer and inherits all its methods.
+- ```changeOptions(options: Partial<AxesLayerOptions>)```: Update the options of the AxesLayerWithDistance and redraw the layer.
 
 ## Contributing
 We welcome contributions to improve this library. Please fork the repository, create a branch, and submit a pull request with your changes.
